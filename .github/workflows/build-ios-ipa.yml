@@ -73,6 +73,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ios/Config
+          /usr/libexec/PlistBuddy -c 'Set :UIFileSharingEnabled true' ios/PocketPal/Info.plist 2>/dev/null || /usr/libexec/PlistBuddy -c 'Add :UIFileSharingEnabled bool true' ios/PocketPal/Info.plist
+          /usr/libexec/PlistBuddy -c 'Set :LSSupportsOpeningDocumentsInPlace true' ios/PocketPal/Info.plist 2>/dev/null || /usr/libexec/PlistBuddy -c 'Add :LSSupportsOpeningDocumentsInPlace bool true' ios/PocketPal/Info.plist
           cat > .env <<'ENV'
           FIREBASE_FUNCTIONS_URL=
           SUPABASE_URL=https://local-build.invalid

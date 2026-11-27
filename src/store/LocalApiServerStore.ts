@@ -15,6 +15,7 @@ import {
 } from '../services/localApiServer';
 import {isPlusUnlocked} from '../services/plus/gate';
 import NativeHardwareInfo from '../specs/NativeHardwareInfo';
+import {acquireKeepAwake} from '../utils/keepAwake';
 import {modelStore} from './ModelStore';
 
 const KEYCHAIN_SERVICE = 'local_api_server_key';
@@ -87,6 +88,7 @@ class LocalApiServerStore {
   private epoch = 0;
   private wentToBackground = false;
   private listener: Listener | undefined = undefined;
+  private releaseKeepAwake: (() => void) | undefined = undefined;
   private readonly openConnections = new Set<OpenConnection>();
   private activeRequests = 0;
 
@@ -97,6 +99,7 @@ class LocalApiServerStore {
       | 'epoch'
       | 'wentToBackground'
       | 'listener'
+      | 'releaseKeepAwake'
       | 'openConnections'
       | 'activeRequests'
     >(this, {
@@ -104,6 +107,7 @@ class LocalApiServerStore {
       epoch: false,
       wentToBackground: false,
       listener: false,
+      releaseKeepAwake: false,
       openConnections: false,
       activeRequests: false,
     });
@@ -235,6 +239,8 @@ class LocalApiServerStore {
     this.epoch += 1;
     this.status = 'stopped';
     this.apiKey = undefined;
+    this.releaseKeepAwake?.();
+    this.releaseKeepAwake = undefined;
     const listener = this.listener;
     this.listener = undefined;
     listener?.close();
@@ -252,6 +258,9 @@ class LocalApiServerStore {
       if (epoch !== this.epoch) {
         listener.close();
         return;
+      }
+      if (Platform.OS === 'ios') {
+        this.releaseKeepAwake ??= acquireKeepAwake();
       }
       runInAction(() => {
         this.status = 'running';
@@ -279,6 +288,8 @@ class LocalApiServerStore {
     if (epoch !== this.epoch) {
       return;
     }
+    this.releaseKeepAwake?.();
+    this.releaseKeepAwake = undefined;
     runInAction(() => {
       this.status = 'failed';
       this.lastError = error;

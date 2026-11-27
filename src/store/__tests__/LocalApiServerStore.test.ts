@@ -13,6 +13,7 @@ import {mockModelStore} from '../../../__mocks__/stores/modelStore';
 import {mockPurchaseStore} from '../../../__mocks__/stores/purchaseStore';
 import {LocalCompletionEngine} from '../../api/completionEngines';
 import NativeHardwareInfo from '../../specs/NativeHardwareInfo';
+import {acquireKeepAwake} from '../../utils/keepAwake';
 
 jest.mock('buffer', () => jest.requireActual('buffer/'));
 
@@ -167,6 +168,33 @@ describe('LocalApiServerStore lifecycle', () => {
     expect(store.status).toBe('running');
     expect(store.baseUrl).toBe('http://127.0.0.1:8080/v1');
     expect(server.options.allowHalfOpen).toBe(true);
+  });
+
+  it('keeps the iOS screen awake while the server is idle and releases on stop', async () => {
+    Platform.OS = 'ios';
+    const release = jest.fn();
+    const acquire = acquireKeepAwake as jest.Mock;
+    acquire.mockClear();
+    acquire.mockReturnValueOnce(release);
+    store.setEnabled(true);
+    await flush();
+    expect(acquire).not.toHaveBeenCalled();
+    lastServer().emitListening();
+    expect(acquire).toHaveBeenCalledTimes(1);
+    expect(release).not.toHaveBeenCalled();
+    store.setEnabled(false);
+    expect(release).toHaveBeenCalledTimes(1);
+    store.stop();
+    expect(release).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows the screen to sleep again when the listener fails', async () => {
+    Platform.OS = 'ios';
+    const release = jest.fn();
+    (acquireKeepAwake as jest.Mock).mockReturnValueOnce(release);
+    const server = await startRunning();
+    server.emit('error', new Error('connection lost'));
+    expect(release).toHaveBeenCalledTimes(1);
   });
 
   it('binds all interfaces with LAN on and shows the Wi-Fi address', async () => {
