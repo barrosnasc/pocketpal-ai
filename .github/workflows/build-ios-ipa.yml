@@ -162,6 +162,7 @@ jobs:
             2>&1 | tee dist/xcodebuild.log
 
       - name: Verify and package IPA for subsequent signing in AltStore
+        id: package
         run: |
           set -euo pipefail
           app="$RUNNER_TEMP/PocketPalDerivedData/Build/Products/Release-iphoneos/PocketPal.app"
@@ -187,6 +188,7 @@ jobs:
         run: python3 scripts/publish-altstore-source.py --ipa dist/PocketPal-unsigned.ipa
 
       - uses: actions/upload-artifact@v4
+        if: always() && steps.package.outcome == 'success'
         with:
           name: PocketPal-unsigned-${{ github.run_number }}
           path: |
