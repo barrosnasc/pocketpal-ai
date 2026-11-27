@@ -35,6 +35,32 @@
           "NSSiriUsageDescription": "PocketPal uses Siri to let you ask questions to your AI Pals using voice commands."
         }
       }
+    },
+    {
+      "name": "Vision Worker",
+      "bundleIdentifier": "br.com.visionworker.app",
+      "developerName": "Barros",
+      "localizedDescription": "Leitura e validação de metadados de imagens no iPhone, com API HTTP na rede local.",
+      "iconURL": "https://avatars.githubusercontent.com/u/92348135?v=4",
+      "category": "developer",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "buildVersion": "1",
+          "date": "2026-11-27T23:00:12+00:00",
+          "localizedDescription": "Fase 2 com estimativas persistentes e validação WebAssembly.",
+          "downloadURL": "https://github.com/barrosnasc/ios-vision-worker/releases/download/ios-46076872853-1/VisionWorker-unsigned.ipa",
+          "size": 672591,
+          "sha256": "8e00368e2c3699afc2c0932a4771514c83d1cdc347189686559350183d3d3f82",
+          "minOSVersion": "18.0"
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {
+          "NSLocalNetworkUsageDescription": "Receber jobs de imagem de computadores na sua rede local."
+        }
+      }
     }
   ],
   "news": []
