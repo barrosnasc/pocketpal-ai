@@ -45,6 +45,16 @@
       "category": "developer",
       "versions": [
         {
+          "version": "0.1.1",
+          "buildVersion": "2",
+          "date": "2026-11-27T23:38:04+00:00",
+          "localizedDescription": "Cancelamento de jobs, consulta de estado da fila e espera de teste em WebAssembly.",
+          "downloadURL": "https://github.com/barrosnasc/ios-vision-worker/releases/download/ios-46083143337-1/VisionWorker-unsigned.ipa",
+          "size": 691643,
+          "sha256": "7dd15fb00fdb2bf20bf7b26d1e67e2204e32f1e4fd17380449ad95667c472221",
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.1.0",
           "buildVersion": "1",
           "date": "2026-11-27T23:00:12+00:00",
