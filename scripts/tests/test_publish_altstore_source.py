@@ -33,9 +33,13 @@ class PublishSourceTest(unittest.TestCase):
             with zipfile.ZipFile(ipa, "w") as archive:
                 archive.writestr("Payload/PocketPal.app/Info.plist", plistlib.dumps(info))
             api_calls = []
+            other_app = {"name": "Vision Worker", "bundleIdentifier": "br.com.visionworker.app"}
 
             def github(path, method="GET", payload=None, missing=False):
                 api_calls.append((path, method, payload))
+                if method == "GET" and "/contents/source.json?" in path:
+                    previous = json.dumps({"apps": [other_app]}).encode()
+                    return {"content": base64.b64encode(previous).decode(), "sha": "previous"}
                 return None
 
             environment = {
@@ -52,6 +56,8 @@ class PublishSourceTest(unittest.TestCase):
             upload = next(payload for path, method, payload in api_calls if method == "PUT")
             feed = json.loads(base64.b64decode(upload["content"]))
             self.assertEqual(feed, json.loads((Path(directory) / "source.json").read_text()))
+            self.assertEqual(feed["apps"][1:], [other_app])
+            self.assertEqual(upload["sha"], "previous")
             app = feed["apps"][0]
             version = app["versions"][0]
             self.assertEqual(app["bundleIdentifier"], info["CFBundleIdentifier"])

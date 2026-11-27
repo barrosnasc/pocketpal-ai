@@ -74,9 +74,14 @@ def main():
         })
     previous = github(f"repos/{repository}/contents/source.json?ref={branch}", missing=True)
     old_versions = []
+    other_apps = []
     if previous:
         source = json.loads(base64.b64decode(previous["content"]))
-        old_versions = source.get("apps", [{}])[0].get("versions", [])
+        for app in source.get("apps", []):
+            if app["bundleIdentifier"] == info["CFBundleIdentifier"]:
+                old_versions = app.get("versions", [])
+            else:
+                other_apps.append(app)
     entry = {
         "version": version,
         "buildVersion": build,
@@ -111,7 +116,7 @@ def main():
                 "entitlements": [],
                 "privacy": {key: value for key, value in info.items() if key.endswith("UsageDescription")},
             },
-        }],
+        }] + other_apps,
         "news": [],
     }
     encoded = base64.b64encode((json.dumps(source, ensure_ascii=False, indent=2) + "\n").encode()).decode()
