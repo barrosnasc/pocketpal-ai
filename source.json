@@ -47,8 +47,8 @@
         {
           "version": "0.1.1",
           "buildVersion": "2",
-          "date": "2026-11-27T23:38:04+00:00",
-          "localizedDescription": "Cancelamento de jobs, consulta de estado da fila e espera de teste em WebAssembly.",
+          "date": "2026-11-27T23:40:29+00:00",
+          "localizedDescription": "Atualização para a Fase 2. Inclui cancelamento de jobs, consulta de estado da fila e espera de teste em WebAssembly.",
           "downloadURL": "https://github.com/barrosnasc/ios-vision-worker/releases/download/ios-46083143337-1/VisionWorker-unsigned.ipa",
           "size": 691643,
           "sha256": "7dd15fb00fdb2bf20bf7b26d1e67e2204e32f1e4fd17380449ad95667c472221",
