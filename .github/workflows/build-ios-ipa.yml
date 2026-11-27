@@ -32,6 +32,8 @@ jobs:
       PLUS_STORE_GATE: 'false'
       E2E_BUILD: 'false'
       NODE_OPTIONS: --max-old-space-size=8192
+      USE_CCACHE: '1'
+      CCACHE_DIR: ${{ runner.temp }}/pocketpal-ccache
 
     steps:
       # Put this workflow in a fork of a-ghorbani/pocketpal-ai.
@@ -74,6 +76,20 @@ jobs:
           ruby-version: '3.2.3'
           bundler: '2.5.23'
           bundler-cache: true
+
+      - name: Restore native compiler cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ runner.os }}-${{ runner.arch }}-ccache-xcode26.6-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-${{ runner.arch }}-ccache-xcode26.6-
+
+      - name: Enable React Native compiler cache
+        run: |
+          set -euo pipefail
+          command -v ccache || brew install ccache
+          ccache --max-size 2G
+          ccache --zero-stats
 
       - name: Configure a standalone local build without backend credentials
         run: |
@@ -212,3 +228,8 @@ jobs:
             ios/Podfile.lock
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: Report compiler cache statistics
+        if: always()
+        run: |
+          if command -v ccache >/dev/null 2>&1; then ccache --show-stats; fi
