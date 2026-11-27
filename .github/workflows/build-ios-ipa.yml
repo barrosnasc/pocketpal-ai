@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       runner:
-        description: 'Current PocketPal requires macos-26 / Xcode 26.6; macos-15 is diagnostic only'
+        description: 'Requires Xcode 26.6 on macos-26 (Intel or ARM); macos-15 is diagnostic only'
         type: choice
-        default: macos-26
+        default: macos-26-intel
         options:
           - macos-15
           - macos-26
@@ -58,6 +58,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+          cache: yarn
+          cache-dependency-path: yarn.lock
 
       - name: Install Yarn and JavaScript dependencies (including upstream patches)
         run: |
@@ -120,6 +122,13 @@ jobs:
           PY
           # Avoid a stale Node path from a developer's machine.
           printf 'export NODE_BINARY="%s"\n' "$(command -v node)" > ios/.xcode.env.local
+
+      - name: Cache CocoaPods downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/CocoaPods
+          key: ${{ runner.os }}-${{ runner.arch }}-cocoapods-${{ hashFiles('ios/Podfile.lock', 'yarn.lock') }}
+          restore-keys: ${{ runner.os }}-${{ runner.arch }}-cocoapods-
 
       - name: Install CocoaPods dependencies
         working-directory: ios
