@@ -1,0 +1,41 @@
+{
+  "name": "PocketPal pessoal",
+  "subtitle": "Builds próprios para inferência local no iPhone",
+  "identifier": "dev.barrosnasc.pocketpal-source",
+  "website": "https://github.com/barrosnasc/pocketpal-ai",
+  "apps": [
+    {
+      "name": "PocketPal AI — build pessoal",
+      "bundleIdentifier": "ai.pocketpal",
+      "developerName": "PocketPal contributors · build pessoal",
+      "localizedDescription": "PocketPal AI compilado do código-fonte MIT, com Plus incluído pelo projeto. Inferência local com Metal e API de chat na LAN. Build pessoal; sem vínculo oficial com os mantenedores.",
+      "iconURL": "https://raw.githubusercontent.com/barrosnasc/pocketpal-ai/ios-server/src/assets/pocketpal-dark-v2.png",
+      "category": "developer",
+      "versions": [
+        {
+          "version": "1.24.0",
+          "buildVersion": "7",
+          "marketingVersion": "1.24.0 · build pessoal 7",
+          "date": "2026-11-27T18:19:24+00:00",
+          "localizedDescription": "Build pessoal do commit af6aa825e3f1. Plus incluído.",
+          "downloadURL": "https://github.com/barrosnasc/pocketpal-ai/releases/download/ios-46037989983-1/PocketPal-unsigned.ipa",
+          "size": 54018409,
+          "sha256": "6e3b81c5b26805e6496142337d0cfc562e440cce4bb8e15621588aaaea210971",
+          "minOSVersion": "15.1"
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {
+          "NSCameraUsageDescription": "PocketPal uses your camera to capture images and video for local AI analysis only. All processing happens on your device and no images are transmitted to external servers.",
+          "NSLocalNetworkUsageDescription": "PocketPal connects to AI servers you run on your own network (like Ollama or llama.cpp) when you add them as remote endpoints, and, when you turn on its local API server, serves the loaded model to apps you point at it on your network.",
+          "NSLocationWhenInUseUsageDescription": "PocketPal never requests or collects your location. A bundled camera library references the system location API to offer optional photo geotagging, which PocketPal leaves turned off.",
+          "NSMicrophoneUsageDescription": "PocketPal uses your microphone for on-device voice input. Speech is transcribed locally on your device and is never transmitted to external servers.",
+          "NSPhotoLibraryUsageDescription": "PocketPal accesses your photo library to select images for local AI analysis only. Selected images are processed entirely on your device and are never transmitted to external servers.",
+          "NSSiriUsageDescription": "PocketPal uses Siri to let you ask questions to your AI Pals using voice commands."
+        }
+      }
+    }
+  ],
+  "news": []
+}
