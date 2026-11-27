@@ -6,7 +6,7 @@ on:
       runner:
         description: 'Requires Xcode 26.6 on macos-26 (Intel or ARM); macos-15 is diagnostic only'
         type: choice
-        default: macos-26-intel
+        default: macos-26
         options:
           - macos-15
           - macos-26
