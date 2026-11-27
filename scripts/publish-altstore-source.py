@@ -80,7 +80,8 @@ def main():
         "version": version,
         "buildVersion": build,
         "marketingVersion": f"{version} · build pessoal {build}",
-        "date": datetime.now(timezone.utc).isoformat(),
+        # AltStore's ISO8601DateFormatter does not enable fractional seconds.
+        "date": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "localizedDescription": f"Build pessoal do commit {commit[:12]}. Plus incluído.",
         "downloadURL": f"https://github.com/{repository}/releases/download/{tag}/{args.ipa.name}",
         "size": args.ipa.stat().st_size,
