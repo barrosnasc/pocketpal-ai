@@ -7,7 +7,6 @@ import json
 import os
 from pathlib import Path
 import plistlib
-import re
 import tempfile
 import unittest
 from unittest.mock import patch

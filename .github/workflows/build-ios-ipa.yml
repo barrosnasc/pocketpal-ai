@@ -38,6 +38,9 @@ jobs:
       # Build the selected fork branch, including its upstream source files.
       - uses: actions/checkout@v4
 
+      - name: Validate AltStore publisher against an IPA fixture
+        run: python3 -m unittest discover -s scripts/tests -p 'test_publish_altstore_source.py'
+
       - name: Check Xcode compatibility before installing dependencies
         run: |
           set -euo pipefail

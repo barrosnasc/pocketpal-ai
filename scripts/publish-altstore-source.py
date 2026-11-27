@@ -51,7 +51,8 @@ def main():
         info = plistlib.loads(archive.read(roots[0]))
     version = info["CFBundleShortVersionString"]
     build = info["CFBundleVersion"]
-    digest = hashlib.file_digest(args.ipa.open("rb"), "sha256").hexdigest()
+    with args.ipa.open("rb") as input_file:
+        digest = hashlib.file_digest(input_file, "sha256").hexdigest()
     notes = args.ipa.parent / "release-notes.txt"
     notes.write_text(
         f"Build pessoal do PocketPal AI {version} ({build}).\n\n"
