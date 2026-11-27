@@ -177,15 +177,11 @@ jobs:
             ENABLE_USER_SCRIPT_SANDBOXING=NO \
             2>&1 | tee dist/xcodebuild.log
 
-      - name: Verify and package IPA for subsequent signing in AltStore
+      - name: Package native build before validation so it can be recovered
         id: package
         run: |
           set -euo pipefail
           app="$RUNNER_TEMP/PocketPalDerivedData/Build/Products/Release-iphoneos/PocketPal.app"
-          test -s "$app/main.jsbundle"
-          scripts/verify-ios-payload.sh "$app" --require-marker
-          scripts/verify-plus-gate.sh "$app" --ungated
-          xcrun lipo -verify_arch arm64 "$app/PocketPal"
           # Source requests only: AltStore's provisioning/signing decides what is granted.
           cp ios/PocketPal/PocketPal.entitlements dist/requested-entitlements.plist
           find "$app" -name '*.appex' -print > dist/app-extensions.txt
@@ -195,6 +191,26 @@ jobs:
           /usr/bin/zip -qry "$GITHUB_WORKSPACE/dist/PocketPal-unsigned.ipa" Payload
           cd "$GITHUB_WORKSPACE/dist"
           shasum -a 256 PocketPal-unsigned.ipa > SHA256SUMS
+
+      - name: Preserve build output before validation
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: PocketPal-build-output-${{ github.run_number }}
+          path: dist/PocketPal-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Verify payload, Plus gate and device architecture
+        id: validate
+        run: |
+          set -euo pipefail
+          app="$RUNNER_TEMP/PocketPalDerivedData/Build/Products/Release-iphoneos/PocketPal.app"
+          test -s "$app/main.jsbundle"
+          scripts/verify-ios-payload.sh "$app" --require-marker
+          scripts/verify-plus-gate.sh "$app" --ungated
+          xcrun lipo "$app/PocketPal" -verify_arch arm64
+          cd "$GITHUB_WORKSPACE/dist"
           unzip -tq PocketPal-unsigned.ipa
 
       - name: Publish IPA and update personal AltStore source
@@ -204,7 +220,7 @@ jobs:
         run: python3 scripts/publish-altstore-source.py --ipa dist/PocketPal-unsigned.ipa
 
       - uses: actions/upload-artifact@v4
-        if: always() && steps.package.outcome == 'success'
+        if: always() && steps.validate.outcome == 'success'
         with:
           name: PocketPal-unsigned-${{ github.run_number }}
           path: |
