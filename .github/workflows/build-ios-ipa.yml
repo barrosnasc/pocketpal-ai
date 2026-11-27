@@ -33,7 +33,6 @@ jobs:
       E2E_BUILD: 'false'
       NODE_OPTIONS: --max-old-space-size=8192
       USE_CCACHE: '1'
-      CCACHE_DIR: ${{ runner.temp }}/pocketpal-ccache
 
     steps:
       # Put this workflow in a fork of a-ghorbani/pocketpal-ai.
@@ -56,6 +55,7 @@ jobs:
           xcrun --sdk iphoneos --show-sdk-version
           xcrun --sdk iphoneos metal -v || xcodebuild -downloadComponent MetalToolchain
           xcrun --sdk iphoneos metal -v
+          printf 'CCACHE_DIR=%s/pocketpal-ccache\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
 
       - uses: actions/setup-node@v4
         with:
