@@ -1,0 +1,197 @@
+name: Build PocketPal unsigned IPA
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: 'Current PocketPal requires macos-26 / Xcode 26.6; macos-15 is diagnostic only'
+        type: choice
+        default: macos-26
+        options:
+          - macos-15
+          - macos-26
+
+permissions:
+  contents: write
+
+concurrency:
+  group: personal-ios-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    env:
+      CI: 'true'
+      HUSKY: '0'
+      PLUS_STORE_GATE: 'false'
+      E2E_BUILD: 'false'
+      NODE_OPTIONS: --max-old-space-size=8192
+
+    steps:
+      # Put this workflow in a fork of a-ghorbani/pocketpal-ai.
+      # Build the selected fork branch, including its upstream source files.
+      - uses: actions/checkout@v4
+
+      - name: Check Xcode compatibility before installing dependencies
+        run: |
+          set -euo pipefail
+          ls -d /Applications/Xcode*.app
+          if [ ! -d /Applications/Xcode_26.6.app ]; then
+            echo '::error::This source needs Xcode 26.6 for its Metal tensor kernels. Run again choosing macos-26. The stock macos-15 image does not meet this requirement.'
+            exit 1
+          fi
+          sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          xcrun --sdk iphoneos metal -v || xcodebuild -downloadComponent MetalToolchain
+          xcrun --sdk iphoneos metal -v
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install Yarn and JavaScript dependencies (including upstream patches)
+        run: |
+          set -euo pipefail
+          npm install --global yarn@1.22.22 --force
+          yarn --version
+          yarn install --frozen-lockfile --non-interactive
+          INIT_CWD="$GITHUB_WORKSPACE" node node_modules/react-native-enriched-markdown/postinstall.mjs
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2.3'
+          bundler: '2.5.23'
+          bundler-cache: true
+
+      - name: Configure a standalone local build without backend credentials
+        run: |
+          set -euo pipefail
+          mkdir -p ios/Config
+          cat > .env <<'ENV'
+          FIREBASE_FUNCTIONS_URL=
+          SUPABASE_URL=https://local-build.invalid
+          SUPABASE_ANON_KEY=local-build-placeholder
+          PALSHUB_API_BASE_URL=https://local-build.invalid
+          APP_URL=pocketpal://app
+          ENABLE_PALSHUB_INTEGRATION=false
+          ENABLE_AUTHENTICATION=false
+          ENABLE_OFFLINE_MODE=true
+          GOOGLE_IOS_CLIENT_ID=local-build.apps.googleusercontent.com
+          GOOGLE_WEB_CLIENT_ID=local-build.apps.googleusercontent.com
+          ENV
+          cat > ios/Config/Env.xcconfig <<'CONFIG'
+          GOOGLE_WEB_CLIENT_ID = local-build.apps.googleusercontent.com
+          REVERSED_GOOGLE_IOS_CLIENT_ID = com.googleusercontent.apps.local-build
+          CONFIG
+          # Firebase is initialized by AppDelegate even for local inference.
+          # These are nonfunctional placeholders, following upstream CI.
+          python3 - <<'PY'
+          import plistlib
+          from pathlib import Path
+          config = {
+              'CLIENT_ID': 'local-build.apps.googleusercontent.com',
+              'REVERSED_CLIENT_ID': 'com.googleusercontent.apps.local-build',
+              'API_KEY': 'local-build-placeholder',
+              'GCM_SENDER_ID': '000000000000',
+              'PLIST_VERSION': '1',
+              'BUNDLE_ID': 'ai.pocketpal',
+              'PROJECT_ID': 'local-build-placeholder',
+              'STORAGE_BUCKET': 'local-build-placeholder.appspot.com',
+              'GOOGLE_APP_ID': '1:000000000000:ios:0000000000000000',
+              'IS_ADS_ENABLED': False,
+              'IS_ANALYTICS_ENABLED': False,
+              'IS_APPINVITE_ENABLED': False,
+              'IS_GCM_ENABLED': False,
+              'IS_SIGNIN_ENABLED': False,
+          }
+          Path('ios/GoogleService-Info.plist').write_bytes(plistlib.dumps(config))
+          PY
+          # Avoid a stale Node path from a developer's machine.
+          printf 'export NODE_BINARY="%s"\n' "$(command -v node)" > ios/.xcode.env.local
+
+      - name: Install CocoaPods dependencies
+        working-directory: ios
+        run: bundle exec pod install
+
+      - name: List workspace and schemes for diagnostics
+        run: |
+          set -euo pipefail
+          find ios -maxdepth 2 -name '*.xcworkspace' -print
+          xcodebuild -list -workspace ios/PocketPal.xcworkspace
+
+      - name: Build arm64 iPhone app without signing
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          git rev-parse HEAD > dist/source-commit.txt
+          xcodebuild -version > dist/toolchain.txt
+          xcodebuild build \
+            -workspace ios/PocketPal.xcworkspace \
+            -scheme PocketPal \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/PocketPalDerivedData" \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=NO \
+            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY='' DEVELOPMENT_TEAM='' \
+            PROVISIONING_PROFILE_SPECIFIER='' \
+            ENABLE_USER_SCRIPT_SANDBOXING=NO \
+            2>&1 | tee dist/xcodebuild.log
+
+      - name: Verify and package IPA for subsequent signing in AltStore
+        run: |
+          set -euo pipefail
+          app="$RUNNER_TEMP/PocketPalDerivedData/Build/Products/Release-iphoneos/PocketPal.app"
+          test -s "$app/main.jsbundle"
+          scripts/verify-ios-payload.sh "$app" --require-marker
+          scripts/verify-plus-gate.sh "$app" --ungated
+          xcrun lipo -verify_arch arm64 "$app/PocketPal"
+          # Source requests only: AltStore's provisioning/signing decides what is granted.
+          cp ios/PocketPal/PocketPal.entitlements dist/requested-entitlements.plist
+          find "$app" -name '*.appex' -print > dist/app-extensions.txt
+          mkdir -p "$RUNNER_TEMP/PocketPalPackage/Payload"
+          ditto "$app" "$RUNNER_TEMP/PocketPalPackage/Payload/PocketPal.app"
+          cd "$RUNNER_TEMP/PocketPalPackage"
+          /usr/bin/zip -qry "$GITHUB_WORKSPACE/dist/PocketPal-unsigned.ipa" Payload
+          cd "$GITHUB_WORKSPACE/dist"
+          shasum -a 256 PocketPal-unsigned.ipa > SHA256SUMS
+          unzip -tq PocketPal-unsigned.ipa
+
+      - name: Publish IPA and update personal AltStore source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: python3 scripts/publish-altstore-source.py --ipa dist/PocketPal-unsigned.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PocketPal-unsigned-${{ github.run_number }}
+          path: |
+            dist/PocketPal-unsigned.ipa
+            dist/SHA256SUMS
+            dist/source-commit.txt
+            dist/toolchain.txt
+            dist/app-extensions.txt
+            dist/requested-entitlements.plist
+            dist/source.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PocketPal-diagnostics-${{ github.run_number }}
+          path: |
+            dist/xcodebuild.log
+            ios/Podfile.lock
+          if-no-files-found: ignore
+          retention-days: 7
