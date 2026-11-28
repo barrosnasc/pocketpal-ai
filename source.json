@@ -46,6 +46,16 @@
       "versions": [
         {
           "version": "0.1.1",
+          "buildVersion": "3",
+          "date": "2026-11-28T00:04:11+00:00",
+          "localizedDescription": "Observabilidade da fila e controle de jobs na interface OLED.",
+          "downloadURL": "https://github.com/barrosnasc/ios-vision-worker/releases/download/ios-46084897347-1/VisionWorker-unsigned.ipa",
+          "size": 703107,
+          "sha256": "b6bbe93b0943c5992338dea5c34576359da6bd8ddab22f0b9b1785a805af6371",
+          "minOSVersion": "18.0"
+        },
+        {
+          "version": "0.1.1",
           "buildVersion": "2",
           "date": "2026-11-27T23:40:29+00:00",
           "localizedDescription": "Atualização para a Fase 2. Inclui cancelamento de jobs, consulta de estado da fila e espera de teste em WebAssembly.",
