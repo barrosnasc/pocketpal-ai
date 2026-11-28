@@ -46,6 +46,17 @@
       "versions": [
         {
           "version": "0.1.1",
+          "buildVersion": "7",
+          "marketingVersion": "0.1.1 · build 7",
+          "date": "2026-11-28T02:11:15+00:00",
+          "localizedDescription": "Build 7 do commit 12fc805d690d. IPA verificado pelo publicador local.",
+          "downloadURL": "https://github.com/barrosnasc/ios-vision-worker/releases/download/ios-46096186947-1/VisionWorker-unsigned.ipa",
+          "size": 815294,
+          "sha256": "730deae2477f7ccb6a777ebd6ebc562866be8db2d5e9fe9b534077bada256365",
+          "minOSVersion": "18.0"
+        },
+        {
+          "version": "0.1.1",
           "buildVersion": "6",
           "marketingVersion": "0.1.1 · build 6",
           "date": "2026-11-28T01:37:09+00:00",
