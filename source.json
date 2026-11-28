@@ -46,6 +46,17 @@
       "versions": [
         {
           "version": "0.1.1",
+          "buildVersion": "6",
+          "marketingVersion": "0.1.1 · build 6",
+          "date": "2026-11-28T01:37:09+00:00",
+          "localizedDescription": "Sleep/Acordar manual, HUD OLED Wasm com telemetria e histórico, e recuperação do ciclo de vida/FIFO.",
+          "downloadURL": "https://github.com/barrosnasc/ios-vision-worker/releases/download/ios-46093198106-1/VisionWorker-unsigned.ipa",
+          "size": 772624,
+          "sha256": "4c3ee2b4e40f8c14ce66b35afaa793eee4601b555c77909cfcf1d4e66704a26e",
+          "minOSVersion": "18.0"
+        },
+        {
+          "version": "0.1.1",
           "buildVersion": "5",
           "marketingVersion": "0.1.1 · build 5",
           "date": "2026-11-28T00:54:25+00:00",
