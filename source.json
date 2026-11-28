@@ -46,6 +46,17 @@
       "versions": [
         {
           "version": "0.1.1",
+          "buildVersion": "5",
+          "marketingVersion": "0.1.1 · build 5",
+          "date": "2026-11-28T00:54:25+00:00",
+          "localizedDescription": "HUD OLED com layout Wasm, telemetria de rede e resiliência de cancelamento de jobs.",
+          "downloadURL": "https://github.com/barrosnasc/ios-vision-worker/releases/download/ios-46089030745-1/VisionWorker-unsigned.ipa",
+          "size": 766464,
+          "sha256": "e44961b0b6ff83ec9aa276816fa5a997074254321c41ab1622b4ec95aa1b052a",
+          "minOSVersion": "18.0"
+        },
+        {
+          "version": "0.1.1",
           "buildVersion": "3",
           "date": "2026-11-28T00:04:11+00:00",
           "localizedDescription": "Observabilidade da fila e controle de jobs na interface OLED.",
